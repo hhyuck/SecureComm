@@ -19,6 +19,9 @@ void SignAndVerifyTest()
     int             i;
     ECDSA_SIG* ecSig = NULL;
     const unsigned char* sigptr;
+
+    EC_KEY          *ecKey2 = NULL;
+	const EC_POINT*	pub_key_point;
  
  
     // Generate Hash for signing
@@ -30,11 +33,19 @@ void SignAndVerifyTest()
     // Set Key Type.
     nidEcc = OBJ_txt2nid( ECCTYPE );
     ecKey = EC_KEY_new_by_curve_name(nidEcc);
+    ecKey2 = EC_KEY_new_by_curve_name(nidEcc);
     if (ecKey == NULL)  ERR_print_errors_fp(stderr);
- 
+    if (ecKey2 == NULL)  ERR_print_errors_fp(stderr);
+
+    EC_KEY_set_asn1_flag(ecKey, OPENSSL_EC_NAMED_CURVE);
+    EC_KEY_set_asn1_flag(ecKey2, OPENSSL_EC_NAMED_CURVE);
+
     // Generate Key.
     EC_KEY_generate_key(ecKey);
  
+	pub_key_point = EC_KEY_get0_public_key(ecKey);
+    printf("LINE %d : %s\n", __LINE__, EC_KEY_set_public_key( ecKey2, pub_key_point ) ? "SUCCESS":"FAIL");
+
     // Sign Message Digest.
     ECDSA_sign(0, m, SHA256_DIGEST_LENGTH, sig, &lenSig, ecKey);
     for(i=0; i<lenSig; i++ )
@@ -51,14 +62,12 @@ void SignAndVerifyTest()
 
     iRet = ECDSA_verify(0, m, SHA256_DIGEST_LENGTH, sig, lenSig, ecKey);
     printf("Verify Result is %d %d\n", iRet, lenSig);
- 
-    // Change Message Digest.
-    m[0]++;
-    iRet = ECDSA_verify(0, m, SHA256_DIGEST_LENGTH, sig, lenSig, ecKey);
-    printf("After Fake  : Verify Result is %d \n", iRet);
-    puts("\n------------------------------\n");
+
+    iRet = ECDSA_verify(0, m, SHA256_DIGEST_LENGTH, sig, lenSig, ecKey2);
+    printf("Verify Result is %d %d\n", iRet, lenSig);
  
     EC_KEY_free(ecKey);
+    EC_KEY_free(ecKey2);
 }
  
  
