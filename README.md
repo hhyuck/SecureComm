@@ -1,6 +1,6 @@
 # SecureComm
 
-## Required Libs
+## Required Lib
 ```
 sudo apt install libmbedtls-dev
 ```
