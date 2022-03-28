@@ -19,4 +19,13 @@
 #define PUB_KEY_SIZE_IN_BYTES	32
 #define ECTYPE_OPENSSL			"prime256v1"
 
+#define CLIENT_SERVER_RAND "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890~!" /* 64 BYTES */
+#define HOST_DEVICE_RAND CLIENT_SERVER_RAND
+
+#define MASTER_SECRET_LABEL "master secret"
+#define KEY_EXPANSION_LABEL "key expansion"
+
+#define MASTER_SECRET_SEED "master secretABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890~!"
+#define KEY_EXPANSION_SEED "key expansionABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890~!"
+
 #endif

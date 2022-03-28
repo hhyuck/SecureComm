@@ -8,6 +8,7 @@
 #include <openssl/err.h>
 #include <openssl/ec.h>
 #include <openssl/pem.h>
+#include <openssl/hmac.h>
 
 #include "config.h"
 void verify_pub_key( char* pub_key_filename, char* signed_pub_key_filename) {
@@ -22,6 +23,7 @@ void verify_pub_key( char* pub_key_filename, char* signed_pub_key_filename) {
 	unsigned char   m[SHA256_DIGEST_LENGTH];
 
 	int ret;
+
 
 	BIGNUM *X, *Y, *r, *s;
 	SHA256_CTX      sha_ctx;
@@ -100,6 +102,7 @@ int main() {
 	EC_POINT*	shared_key;
 	const EC_GROUP* ecgrp ;
 	BIGNUM *d, *X, *Y;
+	HMAC_CTX *hmac_ctx;
 
 	int eccgrp; 
 	int fd;
@@ -107,6 +110,11 @@ int main() {
 
     uint8_t priv_key_buffer[PRIV_KEY_SIZE_IN_BYTES];
     uint8_t pub_key_buffer[PUB_KEY_SIZE_IN_BYTES];
+
+	uint8_t master_secret[64];
+	uint8_t seed[128];
+	int md_len;
+	int i;
 
 
 	/* ---------------------------------------------------------- *
@@ -176,9 +184,39 @@ int main() {
 	verify_pub_key(CARDKEY_PUB_MBED_FILE, ECDHKEY_PUB_SIGNED_MBED_FILE);
 	verify_pub_key(PKI_KEY_PUB_FILE, CARDKEY_PUB_SIGNED_MBED_FILE);
 	
+
+	memset(master_secret,0x00,64);
+    memset(seed,0x00,128);
+	memset(pub_key_buffer, 0x00, PUB_KEY_SIZE_IN_BYTES );
+
+	hmac_ctx = HMAC_CTX_new();
+    BN_bn2lebinpad( X, pub_key_buffer, PUB_KEY_SIZE_IN_BYTES );
+	for(i=0;i<PUB_KEY_SIZE_IN_BYTES;i++) {
+        printf( "%02X", pub_key_buffer[i] );
+    }
+	printf("\n");
+
+    printf("LINE %d : %d\n", __LINE__, HMAC_Init_ex( hmac_ctx, pub_key_buffer, PUB_KEY_SIZE_IN_BYTES, EVP_sha256(), NULL ));
+    printf("LINE %d : %d\n", __LINE__, HMAC_Update( hmac_ctx, MASTER_SECRET_SEED, strlen(MASTER_SECRET_SEED)));
+    printf("LINE %d : %d\n", __LINE__, HMAC_Final( hmac_ctx, master_secret, &md_len));
+
+	printf("master secret : ");
+	for(i=0;i<md_len;i++) {
+        printf( "%02X", master_secret[i] );
+    }
+	printf("\n");
+
+	HMAC(EVP_sha256(), pub_key_buffer, PUB_KEY_SIZE_IN_BYTES, MASTER_SECRET_SEED, strlen(MASTER_SECRET_SEED), master_secret, &md_len); 
+
+	printf("master secret : ");
+	for(i=0;i<md_len;i++) {
+        printf( "%02X", master_secret[i] );
+    }
+	printf("\n");
+
 	EC_KEY_free(myecc);
-    EC_POINT_free(pub_key_point);
-    EC_POINT_free(shared_key);
+	EC_POINT_free(pub_key_point);
+	EC_POINT_free(shared_key);
 	BN_free( X ) ;
 	BN_free( Y ) ;
 	BN_free( d ) ;

@@ -15,8 +15,11 @@ int main() {
 	mbedtls_ecp_point	ecp;
 	mbedtls_ecp_point   shared_key;
 	mbedtls_mpi premaster_secret;
+	mbedtls_md_context_t hmac_ctx;
     int ret, i;
 	int fd;
+	uint8_t master_secret[64];
+	uint8_t seed[128];
 
 	mbedtls_pk_init( &key );
 	ret = mbedtls_pk_setup( &key, mbedtls_pk_info_from_type( (mbedtls_pk_type_t) MBEDTLS_PK_ECKEY ) );
@@ -80,5 +83,45 @@ int main() {
     mbedtls_mpi_init( &premaster_secret );
     mbedtls_mpi_copy( &premaster_secret, &shared_key.X );
 	mbedtls_mpi_write_file( "premaster secret : " , &premaster_secret, 16, stdout );
+	printf( "LINE %d %d\n", __LINE__, mbedtls_mpi_size(&premaster_secret ));
 	/*mbedtls_mpi_write_file( NULL, &shared_key.Y, 16, stdout );*/
+
+	for(i=0;i<32;i++) {
+		printf( "%02X", ((uint8_t*)premaster_secret.p)[i] );
+	}
+	printf("\n");
+	mbedtls_md_init( &hmac_ctx );
+	memset(master_secret,0x00,64);
+	memset(seed,0x00,128);
+	printf( "LINE %d %d\n", __LINE__, mbedtls_md_setup( &hmac_ctx, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1 ) );
+	printf( "LINE %d %d\n", __LINE__, mbedtls_md_hmac_starts( &hmac_ctx, (unsigned char *)premaster_secret.p, mbedtls_mpi_size(&premaster_secret)));
+	printf( "LINE %d %d\n", __LINE__, mbedtls_md_hmac_update( &hmac_ctx, &MASTER_SECRET_SEED[0], strlen(MASTER_SECRET_SEED)));
+	printf( "LINE %d %d\n", __LINE__, mbedtls_md_finish( &hmac_ctx, master_secret));
+
+	for(i=0;i<32;i++) {
+		printf( "%02X", master_secret[i] );
+	}
+	printf("\n");
+
+	mbedtls_md_hmac (mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 
+			(unsigned char *)premaster_secret.p, mbedtls_mpi_size(&premaster_secret), 
+			&MASTER_SECRET_SEED[0], strlen(MASTER_SECRET_SEED), master_secret);
+	for(i=0;i<32;i++) {
+		printf( "%02X", master_secret[i] );
+	}
+	printf("\n");
+
+	memcpy( seed, master_secret, 32 );
+	memcpy( seed+32, MASTER_SECRET_SEED, strlen(MASTER_SECRET_SEED) );
+
+	printf( "LINE %d %d\n", __LINE__, mbedtls_md_hmac_reset( &hmac_ctx ) );
+	printf( "LINE %d %d\n", __LINE__, mbedtls_md_hmac_update( &hmac_ctx, seed, strlen(seed)));
+	printf( "LINE %d %d\n", __LINE__, mbedtls_md_finish( &hmac_ctx, master_secret+32));
+
+	printf("master secret : " );
+	for(i=0;i<48;i++) {
+		printf( "%02X", master_secret[i] );
+	}
+	printf("\n");
+
 }

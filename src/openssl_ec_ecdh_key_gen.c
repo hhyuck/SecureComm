@@ -119,4 +119,3 @@ int main() {
 	BN_free( X ) ;
 	BN_free( Y ) ;
 }
-
