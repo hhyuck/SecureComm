@@ -7,8 +7,7 @@
 #include <stdlib.h>
 #include <mbedtls/ecp.h>
 
-#define PRIV_KEY_SIZE_IN_BYTES 32
-#define PUB_KEY_SIZE_IN_BYTES  32
+#include "config.h"
 
 int main() {
 	mbedtls_pk_context key;
@@ -24,7 +23,7 @@ int main() {
 	eck = mbedtls_pk_ec( key );
 	ret = mbedtls_ecp_group_load( &eck->grp, (mbedtls_ecp_group_id) MBEDTLS_ECP_DP_SECP256R1 );
 	
-	fd = open( "key_mbed.bin" , O_CREAT | O_RDONLY );
+	fd = open( ECDHKEY_MBED_FILE , O_CREAT | O_RDONLY );
 	if ( fd  < 0 )
 		perror( "open");
 
@@ -53,7 +52,7 @@ int main() {
 	ret = mbedtls_mpi_lset( &ecp.Z, 1 );
 
 	
-	fd = open( "key_openssl_pub.bin" , O_CREAT | O_RDONLY );
+	fd = open( ECHDKEY_PUB_OPENSSL_FILE , O_CREAT | O_RDONLY );
     if ( fd  < 0 )
         perror( "open");
 

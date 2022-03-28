@@ -7,6 +7,7 @@
 #include <mbedtls/pk.h>
 #include <mbedtls/ecp.h>
 
+#include "config.h"
 static int furiosa_crypto_rand( void *rng_state, unsigned char *output, size_t len )
 {
     size_t use_len;
@@ -41,7 +42,7 @@ int main() {
 	ecp = mbedtls_pk_ec( key );
 	ret = mbedtls_ecp_gen_key( (mbedtls_ecp_group_id) MBEDTLS_ECP_DP_SECP256R1, ecp, furiosa_crypto_rand, NULL );
 	
-	fd = open( "key_mbed.bin" , O_CREAT | O_RDWR | O_TRUNC, 0644 );
+	fd = open( ECDHKEY_MBED_FILE , O_CREAT | O_RDWR | O_TRUNC, 0644 );
 	if ( fd  < 0 )
 		perror( "open");
 
@@ -59,7 +60,7 @@ int main() {
 
 	close(fd); 
 
-	fd = open( "key_mbed_pub.bin" , O_CREAT | O_RDWR | O_TRUNC, 0644 );
+	fd = open( ECDHKEY_PUB_MBED_FILE , O_CREAT | O_RDWR | O_TRUNC, 0644 );
 	if ( fd  < 0 )
 		perror( "open");
 

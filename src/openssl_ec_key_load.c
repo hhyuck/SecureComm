@@ -9,9 +9,7 @@
 #include <openssl/ec.h>
 #include <openssl/pem.h>
 
-#define ECCTYPE    "prime256v1"
-#define PRIV_KEY_SIZE_IN_BYTES 32
-#define PUB_KEY_SIZE_IN_BYTES  32
+#include "config.h"
 
 int main() {
 	EC_KEY            *myecc  = NULL;
@@ -42,7 +40,7 @@ int main() {
 	/* ---------------------------------------------------------- *
 	 * Create a EC key sructure, setting the group type from NID  *
 	 * ---------------------------------------------------------- */
-	eccgrp = OBJ_txt2nid(ECCTYPE);
+	eccgrp = OBJ_txt2nid(ECTYPE_OPENSSL);
 	myecc = EC_KEY_new_by_curve_name(eccgrp);
 
 	/* -------------------------------------------------------- *
@@ -52,7 +50,7 @@ int main() {
 
     ecgrp = EC_KEY_get0_group(myecc);
 
-    fd = open( "key_openssl.bin" , O_CREAT | O_RDONLY );
+    fd = open( ECHDKEY_OPENSSL_FILE, O_CREAT | O_RDONLY );
     if ( fd  < 0 )
         perror( "open");
 
@@ -70,7 +68,7 @@ int main() {
 
     close(fd);
 
-    fd = open( "key_mbed_pub.bin" , O_CREAT | O_RDONLY );
+    fd = open( ECDHKEY_PUB_MBED_FILE, O_CREAT | O_RDONLY );
     if ( fd  < 0 )
         perror( "open");
 

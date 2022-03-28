@@ -5,8 +5,8 @@
 #include <openssl/ec.h>
 #include <openssl/sha.h>
 
-#define ECCTYPE    "prime256v1"
- 
+#include "config.h"
+
 void SignAndVerifyTest()
 {
     SHA256_CTX      c;
@@ -31,7 +31,7 @@ void SignAndVerifyTest()
     OPENSSL_cleanse(&c, sizeof(c));
  
     // Set Key Type.
-    nidEcc = OBJ_txt2nid( ECCTYPE );
+    nidEcc = OBJ_txt2nid( ECTYPE_OPENSSL );
     ecKey = EC_KEY_new_by_curve_name(nidEcc);
     ecKey2 = EC_KEY_new_by_curve_name(nidEcc);
     if (ecKey == NULL)  ERR_print_errors_fp(stderr);

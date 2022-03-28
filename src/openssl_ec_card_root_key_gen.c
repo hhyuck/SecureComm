@@ -9,7 +9,8 @@
 #include <openssl/ec.h>
 #include <openssl/pem.h>
 
-#define ECCTYPE    "prime256v1"
+#include "config.h"
+
 int main() {
 
 	EC_KEY            *myecc  = NULL;
@@ -31,7 +32,7 @@ int main() {
 	ERR_load_crypto_strings();
 
 
-	eccgrp = OBJ_txt2nid(ECCTYPE);
+	eccgrp = OBJ_txt2nid(ECTYPE_OPENSSL);
 	myecc = EC_KEY_new_by_curve_name(eccgrp);
 	EC_KEY_set_asn1_flag(myecc, OPENSSL_EC_NAMED_CURVE);
 
@@ -46,7 +47,7 @@ int main() {
 	pub_key_point = EC_KEY_get0_public_key(myecc);
 	EC_POINT_get_affine_coordinates(ecgrp, pub_key_point, X, Y, NULL );
 
-	fd1 = open( "card_root_key_openssl.bin" , O_CREAT | O_RDWR | O_TRUNC, 0644 );
+	fd1 = open( PKI_KEY_FILE , O_CREAT | O_RDWR | O_TRUNC, 0644 );
 	if ( fd1 < 0 )
 		perror( "open : ");
 

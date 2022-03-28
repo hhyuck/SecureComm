@@ -7,6 +7,7 @@
 #include <mbedtls/pk.h>
 #include <mbedtls/ecp.h>
 
+#include "config.h"
 static int furiosa_crypto_rand( void *rng_state, unsigned char *output, size_t len ) {
     size_t use_len;
 	int rnd;
