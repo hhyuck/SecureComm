@@ -10,6 +10,87 @@
 #include <openssl/pem.h>
 
 #include "config.h"
+void verify_ecdh_pub_key() {
+	EC_KEY            *myecc  = NULL;
+	int fd; 
+	int nidEcc;
+	uint8_t pub_key_buffer[PUB_KEY_SIZE_IN_BYTES];
+
+	uint8_t data_buffer[PUB_KEY_SIZE_IN_BYTES*2];
+	uint8_t digest[PUB_KEY_SIZE_IN_BYTES*2];
+
+	unsigned char   m[SHA256_DIGEST_LENGTH];
+
+	int ret;
+
+	BIGNUM *X, *Y, *r, *s;
+	SHA256_CTX      sha_ctx;
+
+	ECDSA_SIG *ec_sig;
+
+	nidEcc = OBJ_txt2nid( ECTYPE_OPENSSL );
+	myecc = EC_KEY_new_by_curve_name(nidEcc);
+	EC_KEY_set_asn1_flag(myecc, OPENSSL_EC_NAMED_CURVE);
+
+	X = BN_new();
+	Y = BN_new();
+	r = BN_new();
+	s = BN_new();
+
+	fd = open( CARDKEY_PUB_MBED_FILE, O_RDONLY );
+    if ( fd  < 0 ) {
+        perror( "open");
+		return ;
+	}
+
+    read(fd, pub_key_buffer, PUB_KEY_SIZE_IN_BYTES );
+    BN_lebin2bn( pub_key_buffer, PUB_KEY_SIZE_IN_BYTES, X );
+
+    read(fd, pub_key_buffer, PUB_KEY_SIZE_IN_BYTES );
+    BN_lebin2bn( pub_key_buffer, PUB_KEY_SIZE_IN_BYTES, Y );
+
+	close(fd);
+
+    printf("LINE %d : %d\n", __LINE__, EC_KEY_set_public_key_affine_coordinates( myecc, X, Y ));
+
+	fd = open( ECDHKEY_PUB_SIGNED_MBED_FILE, O_RDONLY );
+    if ( fd  < 0 ) {
+        perror( "open");
+		return ;
+	}
+    read(fd, data_buffer, PUB_KEY_SIZE_IN_BYTES*2 );
+
+    read(fd, pub_key_buffer, PUB_KEY_SIZE_IN_BYTES );
+    BN_lebin2bn( pub_key_buffer, PUB_KEY_SIZE_IN_BYTES, r );
+
+    read(fd, pub_key_buffer, PUB_KEY_SIZE_IN_BYTES );
+    BN_lebin2bn( pub_key_buffer, PUB_KEY_SIZE_IN_BYTES, s );
+
+	ec_sig = ECDSA_SIG_new();
+    printf("LINE %d : %d\n", __LINE__, ECDSA_SIG_set0( ec_sig, r, s ) );
+
+	close(fd);
+
+
+    // Generate Hash for signing
+    SHA256_Init(&sha_ctx);
+    SHA256_Update(&sha_ctx, data_buffer, PUB_KEY_SIZE_IN_BYTES*2);
+    SHA256_Final(m, &sha_ctx);
+    OPENSSL_cleanse(&sha_ctx, sizeof(sha_ctx));
+
+	ret = ECDSA_do_verify( m, SHA256_DIGEST_LENGTH, ec_sig, myecc);
+
+
+	BN_free( X ) ;
+	BN_free( Y ) ;
+	ECDSA_SIG_free( ec_sig ); // this frees r and s
+
+	if ( ret == 0 ) {
+		printf("Verfification failed\n");
+		exit(0);
+	} 
+	printf("Verfification success\n");
+}
 
 int main() {
 	EC_KEY            *myecc  = NULL;
@@ -50,7 +131,7 @@ int main() {
 
     ecgrp = EC_KEY_get0_group(myecc);
 
-    fd = open( ECHDKEY_OPENSSL_FILE, O_CREAT | O_RDONLY );
+    fd = open( ECHDKEY_OPENSSL_FILE, O_RDONLY );
     if ( fd  < 0 )
         perror( "open");
 
@@ -68,7 +149,7 @@ int main() {
 
     close(fd);
 
-    fd = open( ECDHKEY_PUB_MBED_FILE, O_CREAT | O_RDONLY );
+    fd = open( ECDHKEY_PUB_MBED_FILE, O_RDONLY );
     if ( fd  < 0 )
         perror( "open");
 
@@ -89,6 +170,8 @@ int main() {
     printf("LINE %d : %d\n", __LINE__, EC_POINT_get_affine_coordinates( ecgrp, shared_key, X, Y, NULL ));
 
     printf("premaster secret : "); BN_print_fp( stdout, X ); printf("\n");
+
+	verify_ecdh_pub_key();
 	
 	EC_KEY_free(myecc);
     EC_POINT_free(pub_key_point);

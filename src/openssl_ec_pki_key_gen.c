@@ -22,7 +22,7 @@ int main() {
 	BIGNUM *Y; 
 
 	int eccgrp; 
-	int fd1;
+	int fd1,fd2;
 	int key_size_in_bytes;
 	uint8_t *buffer;
 
@@ -47,13 +47,16 @@ int main() {
 	pub_key_point = EC_KEY_get0_public_key(myecc);
 	EC_POINT_get_affine_coordinates(ecgrp, pub_key_point, X, Y, NULL );
 
-	fd1 = open( PKI_KEY_FILE , O_CREAT | O_RDWR | O_TRUNC, 0644 );
-	if ( fd1 < 0 )
-		perror( "open : ");
-
     printf("Private key\t: "); BN_print_fp( stdout, d ); printf("\n");
     printf("Public key (X)\t: "); BN_print_fp( stdout, X ); printf("\n");
     printf("Public key (Y)\t: "); BN_print_fp( stdout, Y ); printf("\n");
+
+	fd1 = open( PKI_KEY_FILE , O_CREAT | O_RDWR | O_TRUNC, 0644 );
+	if ( fd1 < 0 )
+		perror( "open : ");
+	fd2 = open( PKI_KEY_PUB_FILE , O_CREAT | O_RDWR | O_TRUNC, 0644 );
+	if ( fd1 < 0 )
+		perror( "open : ");
 
 	key_size_in_bytes = BN_num_bytes(d);
 	buffer = (uint8_t*) malloc( key_size_in_bytes );
@@ -66,15 +69,18 @@ int main() {
 	memset( buffer, 0x00, key_size_in_bytes );
 	BN_bn2lebinpad( X, buffer, key_size_in_bytes );
 	write( fd1, buffer, key_size_in_bytes );
+	write( fd2, buffer, key_size_in_bytes );
 
 	key_size_in_bytes = BN_num_bytes(Y);
 	buffer = realloc( buffer, key_size_in_bytes );
 	memset( buffer, 0x00, key_size_in_bytes );
 	BN_bn2lebinpad( Y, buffer, key_size_in_bytes );
 	write( fd1, buffer, key_size_in_bytes );
+	write( fd2, buffer, key_size_in_bytes );
 
 	free( buffer );
 	close(fd1);
+	close(fd2);
 
 	EC_KEY_free(myecc);
 	BN_free( X );

@@ -23,7 +23,7 @@ int main() {
 	eck = mbedtls_pk_ec( key );
 	ret = mbedtls_ecp_group_load( &eck->grp, (mbedtls_ecp_group_id) MBEDTLS_ECP_DP_SECP256R1 );
 	
-	fd = open( ECDHKEY_MBED_FILE , O_CREAT | O_RDONLY );
+	fd = open( ECDHKEY_MBED_FILE , O_RDONLY );
 	if ( fd  < 0 )
 		perror( "open");
 
@@ -52,9 +52,10 @@ int main() {
 	ret = mbedtls_mpi_lset( &ecp.Z, 1 );
 
 	
-	fd = open( ECHDKEY_PUB_OPENSSL_FILE , O_CREAT | O_RDONLY );
-    if ( fd  < 0 )
+	fd = open( ECHDKEY_PUB_OPENSSL_FILE , O_RDONLY );
+    if ( fd  < 0 ) {
         perror( "open");
+	}
 
 	read(fd, ecp.X.p, PUB_KEY_SIZE_IN_BYTES );
     //printf( "size : %zu signed : %d\n", mbedtls_mpi_size(&ecp.X), ecp.X.s );
