@@ -18,7 +18,6 @@ void verify_pub_key( char* pub_key_filename, char* signed_pub_key_filename) {
 	uint8_t pub_key_buffer[PUB_KEY_SIZE_IN_BYTES];
 
 	uint8_t data_buffer[PUB_KEY_SIZE_IN_BYTES*2];
-	uint8_t digest[PUB_KEY_SIZE_IN_BYTES*2];
 
 	unsigned char   m[SHA256_DIGEST_LENGTH];
 
@@ -102,18 +101,19 @@ int main() {
 	EC_POINT*	shared_key;
 	const EC_GROUP* ecgrp ;
 	BIGNUM *d, *X, *Y;
-	HMAC_CTX *hmac_ctx;
+	//HMAC_CTX *hmac_ctx;
 
 	int eccgrp; 
 	int fd;
-	int key_size_in_bytes;
+	//int key_size_in_bytes;
 
     uint8_t priv_key_buffer[PRIV_KEY_SIZE_IN_BYTES];
     uint8_t pub_key_buffer[PUB_KEY_SIZE_IN_BYTES];
 
 	uint8_t master_secret[64];
+    uint8_t keys[64];
 	uint8_t seed[128];
-	int md_len;
+	unsigned int md_len;
 	int i;
 
 
@@ -189,13 +189,15 @@ int main() {
     memset(seed,0x00,128);
 	memset(pub_key_buffer, 0x00, PUB_KEY_SIZE_IN_BYTES );
 
-	hmac_ctx = HMAC_CTX_new();
+	//hmac_ctx = HMAC_CTX_new();
     BN_bn2lebinpad( X, pub_key_buffer, PUB_KEY_SIZE_IN_BYTES );
+    /*
 	for(i=0;i<PUB_KEY_SIZE_IN_BYTES;i++) {
         printf( "%02X", pub_key_buffer[i] );
     }
-	printf("\n");
+	printf("\n");*/
 
+    /*
     printf("LINE %d : %d\n", __LINE__, HMAC_Init_ex( hmac_ctx, pub_key_buffer, PUB_KEY_SIZE_IN_BYTES, EVP_sha256(), NULL ));
     printf("LINE %d : %d\n", __LINE__, HMAC_Update( hmac_ctx, MASTER_SECRET_SEED, strlen(MASTER_SECRET_SEED)));
     printf("LINE %d : %d\n", __LINE__, HMAC_Final( hmac_ctx, master_secret, &md_len));
@@ -204,15 +206,50 @@ int main() {
 	for(i=0;i<md_len;i++) {
         printf( "%02X", master_secret[i] );
     }
-	printf("\n");
+	printf("\n");*/
 
-	HMAC(EVP_sha256(), pub_key_buffer, PUB_KEY_SIZE_IN_BYTES, MASTER_SECRET_SEED, strlen(MASTER_SECRET_SEED), master_secret, &md_len); 
+	HMAC(EVP_sha256(), pub_key_buffer, PUB_KEY_SIZE_IN_BYTES, 
+        (unsigned char*) MASTER_SECRET_SEED, strlen(MASTER_SECRET_SEED), master_secret, &md_len); 
 
-	printf("master secret : ");
+    /*
 	for(i=0;i<md_len;i++) {
         printf( "%02X", master_secret[i] );
     }
+	printf("\n");*/
+
+    memset(seed,0x00,128);
+    memcpy( seed, master_secret, 32 );
+    memcpy( seed+32, &MASTER_SECRET_SEED[0], strlen(MASTER_SECRET_SEED) );
+
+	HMAC(EVP_sha256(), pub_key_buffer, PUB_KEY_SIZE_IN_BYTES, 
+        (unsigned char*) seed, strlen( (char*)seed), master_secret+32, &md_len); 
+
+	printf("master secret : ");
+	for(i=0;i<48;i++) {
+        printf( "%02X", master_secret[i] );
+    }
 	printf("\n");
+
+	HMAC(EVP_sha256(), master_secret, 48, 
+        (unsigned char*) KEY_EXPANSION_SEED, strlen(KEY_EXPANSION_SEED), keys, &md_len); 
+
+    memset( seed,0x00,128);
+    memcpy( seed, keys, 32 );
+    memcpy( seed+32, &KEY_EXPANSION_SEED[0], strlen(KEY_EXPANSION_SEED) );
+
+    HMAC ( EVP_sha256(), master_secret, 48,
+            (unsigned char*) seed, strlen( (char*)seed), keys+32, &md_len);
+
+    printf("key for host-write\t: " );
+    for(i=0;i<32;i++) {
+        printf( "%02X", keys[i] );
+    }
+    printf("\n");
+    printf("key for device-write\t: " );
+    for(i=32;i<64;i++) {
+        printf( "%02X", keys[i] );
+    }
+    printf("\n");
 
 	EC_KEY_free(myecc);
 	EC_POINT_free(pub_key_point);
