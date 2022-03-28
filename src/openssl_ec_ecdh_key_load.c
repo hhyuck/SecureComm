@@ -10,7 +10,7 @@
 #include <openssl/pem.h>
 
 #include "config.h"
-void verify_ecdh_pub_key() {
+void verify_pub_key( char* pub_key_filename, char* signed_pub_key_filename) {
 	EC_KEY            *myecc  = NULL;
 	int fd; 
 	int nidEcc;
@@ -37,7 +37,8 @@ void verify_ecdh_pub_key() {
 	r = BN_new();
 	s = BN_new();
 
-	fd = open( CARDKEY_PUB_MBED_FILE, O_RDONLY );
+	//fd = open( CARDKEY_PUB_MBED_FILE, O_RDONLY );
+	fd = open( pub_key_filename, O_RDONLY );
     if ( fd  < 0 ) {
         perror( "open");
 		return ;
@@ -53,7 +54,8 @@ void verify_ecdh_pub_key() {
 
     printf("LINE %d : %d\n", __LINE__, EC_KEY_set_public_key_affine_coordinates( myecc, X, Y ));
 
-	fd = open( ECDHKEY_PUB_SIGNED_MBED_FILE, O_RDONLY );
+	//fd = open( ECDHKEY_PUB_SIGNED_MBED_FILE, O_RDONLY );
+	fd = open( signed_pub_key_filename, O_RDONLY );
     if ( fd  < 0 ) {
         perror( "open");
 		return ;
@@ -171,7 +173,8 @@ int main() {
 
     printf("premaster secret : "); BN_print_fp( stdout, X ); printf("\n");
 
-	verify_ecdh_pub_key();
+	verify_pub_key(CARDKEY_PUB_MBED_FILE, ECDHKEY_PUB_SIGNED_MBED_FILE);
+	verify_pub_key(PKI_KEY_PUB_FILE, CARDKEY_PUB_SIGNED_MBED_FILE);
 	
 	EC_KEY_free(myecc);
     EC_POINT_free(pub_key_point);
