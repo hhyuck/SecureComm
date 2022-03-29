@@ -6,8 +6,32 @@
 #include <mbedtls/pk.h>
 #include <stdlib.h>
 #include <mbedtls/ecp.h>
+#include <mbedtls/gcm.h>
 
 #include "config.h"
+
+void aes_gcm_test( uint8_t *keys ) {
+    mbedtls_gcm_context aes;
+    //char *iv = "abababababababab";
+    char *iv = "abababababab";
+    unsigned char output[64] = {0};
+    char *input = "GCM Example code!";
+    int i = 0;
+
+    mbedtls_gcm_init( &aes );
+    mbedtls_gcm_setkey( &aes,MBEDTLS_CIPHER_ID_AES , (const unsigned char*) keys, 256 );
+    mbedtls_gcm_starts(&aes, MBEDTLS_GCM_ENCRYPT, (const unsigned char*)iv, strlen(iv),NULL, 0);
+    mbedtls_gcm_update(&aes,strlen(input),(const unsigned char*)input, output);
+    mbedtls_gcm_free( &aes );
+
+    printf("AES GCM TEST\n");
+    printf("Input\t: %s\n", input );
+    printf("Output\t: " );
+    for( i=0; i<strlen(input); i++ ) {
+        printf("%02X", output[i] );
+    }
+    printf( "\n" );
+}
 
 int main()
 {
@@ -185,4 +209,5 @@ int main()
 	}
 	printf("\n");
 
+    aes_gcm_test( keys );
 }

@@ -9,8 +9,34 @@
 #include <openssl/ec.h>
 #include <openssl/pem.h>
 #include <openssl/hmac.h>
+#include <openssl/evp.h>
 
 #include "config.h"
+
+void aes_gcm_test( uint8_t *keys ) {
+    EVP_CIPHER_CTX *ctx;
+    char *iv = "abababababab";
+    unsigned char output[64] = {0};
+    char *input = "GCM Example code!";
+    int i = 0;
+    int outlen;
+
+    ctx = EVP_CIPHER_CTX_new();
+    EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL);
+    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, strlen(iv), NULL);
+    EVP_EncryptInit (ctx, NULL, (const unsigned char *)keys, (const unsigned char *)iv);
+    EVP_EncryptUpdate (ctx, NULL, &outlen, NULL, 0);
+    EVP_EncryptUpdate (ctx, output, &outlen, input, strlen(input));
+
+    printf("AES GCM TEST\n");
+    printf("Input\t: %s\n", input );
+    printf("Output\t: " );
+    for( i=0; i<strlen(input); i++ ) {
+        printf("%02X", output[i] );
+    }
+    printf( "\n" );
+}
+
 void verify_pub_key(char *pub_key_filename, char *signed_pub_key_filename)
 {
 	EC_KEY *myecc = NULL;
@@ -258,6 +284,8 @@ int main()
 		printf("%02X", keys[i]);
 	}
 	printf("\n");
+
+    aes_gcm_test(keys);
 
 	EC_KEY_free(myecc);
 	EC_POINT_free(pub_key_point);
