@@ -114,12 +114,14 @@ int main()
 	memset(buffer, 0x00, key_size_in_bytes);
 	BN_bn2lebinpad(X, buffer, key_size_in_bytes);
 	write(fd, buffer, key_size_in_bytes);
+    printf("R size : %d\n", key_size_in_bytes);
 
 	key_size_in_bytes = BN_num_bytes(X);
 	buffer = (uint8_t *) realloc(buffer, key_size_in_bytes);
 	memset(buffer, 0x00, key_size_in_bytes);
 	BN_bn2lebinpad(Y, buffer, key_size_in_bytes);
 	write(fd, buffer, key_size_in_bytes);
+    printf("S size : %d\n", key_size_in_bytes);
 
 	close(fd);
 

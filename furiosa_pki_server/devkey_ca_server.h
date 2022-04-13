@@ -4,6 +4,7 @@
 #include <grpcpp/server_context.h>
 
 #include "furiosa_ca_devkey.grpc.pb.h"
+#include <openssl/ec.h>
 
 #ifndef __devkey_ca_server__
 #define __devkey_ca_server__
@@ -18,6 +19,7 @@ class DevKeyCAImpl final : public devkeyca::DevKeyCA::Service {
             
     private:
         int SignDevKeyPub(uint8_t *devkey_pub, uint8_t devkey_pub_len, uint8_t *signature, uint8_t *sig_len);
+        EC_KEY *sign_key;
 };
 
 #endif

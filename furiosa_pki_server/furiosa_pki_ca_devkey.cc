@@ -67,7 +67,8 @@ int generate_pki_ca_devkey() {
     d = EC_KEY_get0_private_key(myecc);
     pub_key_point = EC_KEY_get0_public_key(myecc);
     EC_POINT_get_affine_coordinates(ecgrp, pub_key_point, X, Y, NULL);
-
+    
+    printf("Generate EC Key\n");
     printf("Private key\t: ");
     BN_print_fp(stdout, d);
     printf("\n");
