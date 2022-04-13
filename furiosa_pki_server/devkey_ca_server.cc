@@ -19,6 +19,12 @@ using devkeyca::SignDevKeyRequest;
 using devkeyca::SignDevKeyResponse;
 using devkeyca::RetCode;
 
+DevKeyCAImpl::DevKeyCAImpl() {
+}
+
+DevKeyCAImpl::~DevKeyCAImpl() {
+}
+
 Status DevKeyCAImpl::SignDevKey(ServerContext* context, const SignDevKeyRequest* request, 
         SignDevKeyResponse* response) {
     std::string key_pub_signature;
@@ -26,4 +32,12 @@ Status DevKeyCAImpl::SignDevKey(ServerContext* context, const SignDevKeyRequest*
     response->set_signature(key_pub_signature);
     response->set_ret(RetCode::OK);
     return Status::OK;
+}
+
+int DevKeyCAImpl::InitializeSignCtx() {
+    return 1;
+}
+
+int DevKeyCAImpl::SignDevKeyPub(uint8_t *devkey_pub, uint8_t devkey_pub_len, uint8_t *signature, uint8_t *sig_len){
+    return 1;
 }

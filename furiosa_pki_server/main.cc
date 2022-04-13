@@ -26,10 +26,9 @@ using grpc::Status;
 
 void RunServer() {
     std::string server_address("0.0.0.0:50051");
-    std::string ca_keypriv_file("key_priv");
+    DevKeyCAImpl service;
     int ret;
 
-    DevKeyCAImpl service(ca_keypriv_file);
     ret = service.InitializeSignCtx();
     if ( ret != 1 ) {
         std::cerr << "Error in initializing sign context...." << std::endl;
