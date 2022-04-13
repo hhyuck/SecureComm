@@ -13,10 +13,12 @@ enum RetCode {
 
 
 message SignDevKeyRequest {
-    bytes devkeypub = 1;
+    repeated uint64 devkeypub = 1;
+    //bytes devkeypub = 1;
 }
 
 message SignDevKeyResponse {
     RetCode ret = 1;
-    bytes signature = 2;
+    //bytes signature = 2;
+    repeated uint64 signature = 2;
 }

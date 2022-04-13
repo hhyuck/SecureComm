@@ -36,6 +36,7 @@ int main()
 
 	ECDSA_SIG *ecSig = NULL;
 	uint8_t *buffer;
+    int i;
 
 	OpenSSL_add_all_algorithms();
 	ERR_load_BIO_strings();
@@ -69,8 +70,10 @@ int main()
 	/*
 	   printf("Read private key %d\n", EC_KEY_set_private_key( myecc, d ));
 	   printf("Read public key %d\n",  EC_KEY_set_public_key_affine_coordinates( myecc, X, Y )); */
-	EC_KEY_set_private_key(myecc, d);
-	EC_KEY_set_public_key_affine_coordinates(myecc, X, Y);
+	//EC_KEY_set_private_key(myecc, d);
+	//EC_KEY_set_public_key_affine_coordinates(myecc, X, Y);
+
+    EC_KEY_generate_key(myecc);
 
 	close(fd);
 
@@ -82,21 +85,31 @@ int main()
 	read(fd, data_buffer, PUB_KEY_SIZE_IN_BYTES * 2);
 	close(fd);
 
+    printf("%d\n", EC_KEY_check_key(myecc));
+
 	// Generate Hash for signing
 	SHA256_Init(&sha_ctx);
 	SHA256_Update(&sha_ctx, data_buffer, PUB_KEY_SIZE_IN_BYTES * 2);
 	SHA256_Final(m, &sha_ctx);
 	OPENSSL_cleanse(&sha_ctx, sizeof (sha_ctx));
 
+    printf("Hash Code : ");
+    for(i=0; i<SHA256_DIGEST_LENGTH; i++ )
+        printf("%X", m[i] );
+    printf("\n");
+
+    ecSig = ECDSA_do_sign( m, SHA256_DIGEST_LENGTH,myecc);
+    /*
 	printf("Sign %s\n",
 	       ECDSA_sign(0, m, SHA256_DIGEST_LENGTH, sig, &lenSig,
 			  myecc) == 1 ? "SUCCESS" : "FAIL");
+    printf("SIGLEN %d\n", lenSig );
 
 	sigptr = &sig[0];
 	if (d2i_ECDSA_SIG(&ecSig, &sigptr, lenSig) == NULL) {
 		printf("Error\n");
 		return fd;
-	}
+	}*/
 
 	fd = open(CARDKEY_PUB_SIGNED_MBED_FILE, O_CREAT | O_RDWR | O_TRUNC,
 		  0644);
@@ -116,15 +129,34 @@ int main()
 	write(fd, buffer, key_size_in_bytes);
     printf("R size : %d\n", key_size_in_bytes);
 
-	key_size_in_bytes = BN_num_bytes(X);
+	key_size_in_bytes = BN_num_bytes(Y);
 	buffer = (uint8_t *) realloc(buffer, key_size_in_bytes);
 	memset(buffer, 0x00, key_size_in_bytes);
 	BN_bn2lebinpad(Y, buffer, key_size_in_bytes);
 	write(fd, buffer, key_size_in_bytes);
     printf("S size : %d\n", key_size_in_bytes);
 
+    BN_print_fp(stdout, X);
+    BN_print_fp(stdout, Y);
+    printf("\n");
+
+    printf("verify : %d\n", ECDSA_do_verify(m, SHA256_DIGEST_LENGTH, ecSig, myecc));
+
+
 	close(fd);
 
+    ecSig = ECDSA_do_sign( m, SHA256_DIGEST_LENGTH,myecc);
+	X = ECDSA_SIG_get0_r(ecSig);
+	Y = ECDSA_SIG_get0_s(ecSig);
+	key_size_in_bytes = BN_num_bytes(X);
+    printf("R size : %d\n", key_size_in_bytes);
+	key_size_in_bytes = BN_num_bytes(Y);
+    printf("S size : %d\n", key_size_in_bytes);
+    BN_print_fp(stdout, X);
+    BN_print_fp(stdout, Y);
+    printf("\n");
+
+    printf("verify : %d\n", ECDSA_do_verify(m, SHA256_DIGEST_LENGTH, ecSig, myecc));
 	//printf( "Verify %d\n", ECDSA_verify(0, m, SHA256_DIGEST_LENGTH, sig, &lenSig, ecKey));
 	EC_KEY_free(myecc);
 	BN_free(X);

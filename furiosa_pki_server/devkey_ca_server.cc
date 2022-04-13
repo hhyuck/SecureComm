@@ -45,24 +45,42 @@ DevKeyCAImpl::~DevKeyCAImpl() {
 
 Status DevKeyCAImpl::SignDevKey(ServerContext* context, const SignDevKeyRequest* request, 
         SignDevKeyResponse* response) {
-
-    std::string str_devkeypub;
     uint8_t signature[128] = {0,}; 
     uint8_t signature_len;
     int ret;
+    int pubkey_size;
+    uint8_t *devkeypub;
+    uint64_t *devkeypub_ptr;
 
-    str_devkeypub = request->devkeypub();
-    ret = SignDevKeyPub( (uint8_t *)str_devkeypub.c_str(), (uint8_t)str_devkeypub.size(), signature, &signature_len);
+    pubkey_size = request->devkeypub_size();
+    devkeypub = (uint8_t*)malloc(sizeof(uint64_t)*pubkey_size);
+    devkeypub_ptr = (uint64_t*)devkeypub;
+    
+    for(int i=0; i<pubkey_size; i++ )
+        devkeypub_ptr[i] = request->devkeypub(i);
 
-    if (ret==0) {
+    printf("Pub Key : ");
+    for(int i=0; i<pubkey_size*8; i++)
+        printf("%X", devkeypub[i]);
+    printf("\n");
+    ret = SignDevKeyPub( devkeypub, pubkey_size*8, signature, &signature_len);
+    printf("Signature (%d): ", signature_len);
+    for(int i=0; i<signature_len; i++)
+        printf("%02X", signature[i]);
+    printf("\n");
+
+    if (ret==0 || signature_len % 8 != 0) {
         response->set_ret(RetCode::UNKNOWN_ERROR);
     }
     else {
-        std::string key_pub_signature;
-        key_pub_signature = (char*)signature;
-        response->set_signature(key_pub_signature);
+        uint64_t *key_pub_signature = (uint64_t*)signature;
+        for(int i=0; i<signature_len/8; i++ )
+            //response->set_signature(i, key_pub_signature[i]);
+            response->add_signature(key_pub_signature[i]);
         response->set_ret(RetCode::OK);
     }
+
+    free(devkeypub);
     return Status::OK;
 }
 
@@ -133,10 +151,7 @@ int DevKeyCAImpl::InitializeSignCtx() {
 
 int DevKeyCAImpl::SignDevKeyPub(uint8_t *devkey_pub, uint8_t devkey_pub_len, uint8_t *signature, uint8_t *signature_len){
     uint8_t hash_code[SHA256_DIGEST_LENGTH]; 
-    uint8_t sig[256];
-    unsigned int sig_len;
     unsigned int sig_bn_len;
-    const uint8_t *sig_ptr;
 
     int ret;
 
@@ -149,17 +164,16 @@ int DevKeyCAImpl::SignDevKeyPub(uint8_t *devkey_pub, uint8_t devkey_pub_len, uin
     SHA256_Final(hash_code, &sha_ctx);
     OPENSSL_cleanse(&sha_ctx, sizeof (sha_ctx));
 
-    ret = ECDSA_sign(0, hash_code, SHA256_DIGEST_LENGTH, sig, &sig_len, sign_key);
-    if (ret != 1) {
+    printf("HashCode : ");
+    for(int i=0; i<SHA256_DIGEST_LENGTH; i++)
+        printf("%X", hash_code[i]);
+    printf("\n");
+
+    ec_sig = ECDSA_do_sign( hash_code, SHA256_DIGEST_LENGTH, sign_key);
+    if (ec_sig == NULL) {
         printf("sign error\n");
         return 0;
-    }
-
-    sig_ptr = &sig[0];
-    if ((ec_sig = d2i_ECDSA_SIG(NULL, &sig_ptr, sig_len)) == NULL) {
-        printf("Error\n");
-        return 0;
-    }
+    } 
 
     sig_bn = ECDSA_SIG_get0_r(ec_sig);
     sig_bn_len = BN_num_bytes(sig_bn);
