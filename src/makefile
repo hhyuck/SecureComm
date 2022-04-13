@@ -23,7 +23,8 @@ openssl_ec_ecdh_key_load: openssl_ec_ecdh_key_load.c
 	$(CC) -o $@ $@.c $(CFLAGS) $(LDLAGS_OPENSSL)
 
 openssl_ec_pki_key_gen: openssl_ec_pki_key_gen.c
-	$(CC) -o $@ $@.c $(CFLAGS) $(LDLAGS_OPENSSL)
+	#$(CC) -o $@ $@.c $(CFLAGS) $(LDLAGS_OPENSSL)
+	g++ -o $@ $@.c $(CFLAGS) $(LDLAGS_OPENSSL)
 
 openssl_ec_pki_sign: openssl_ec_pki_sign.c
 	$(CC) -o $@ $@.c $(CFLAGS) $(LDLAGS_OPENSSL)

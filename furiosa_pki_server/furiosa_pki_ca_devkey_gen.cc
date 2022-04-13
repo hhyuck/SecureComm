@@ -11,7 +11,7 @@
 
 #include "config.h"
 
-int main()
+int key_gen()
 {
 
 	EC_KEY *myecc = NULL;
@@ -90,4 +90,5 @@ int main()
 	EC_KEY_free(myecc);
 	BN_free(X);
 	BN_free(Y);
+    return 0;
 }
