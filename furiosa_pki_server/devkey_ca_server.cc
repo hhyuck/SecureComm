@@ -13,6 +13,7 @@
 
 #include "furiosa_ca_devkey.grpc.pb.h"
 #include "furiosa_ca_devkey.pb.h"
+#include "furiosa_pki_ca_devkey.h"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -58,6 +59,18 @@ void RunServer() {
 }
 
 int main(int argc, char** argv) {
+    int ret;
+
+    initialize_openssl();
+
+    ret = check_key_files();
+    if( ret == 0 ) {
+        ret = generate_pki_ca_devkey();
+        if( ret != 0 ) { 
+            std::cout << "Error in staring dev key server... " << std::endl;
+            return 0;
+        }
+    } 
     RunServer();
     return 0;
 }
