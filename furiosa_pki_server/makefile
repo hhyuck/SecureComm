@@ -9,7 +9,7 @@ LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++ libssl libcrypto`
 
 PROGS=devkey_ca_server
 
-OBJECTS=devkey_ca_server.o furiosa_ca_devkey.grpc.pb.o furiosa_ca_devkey.pb.o furiosa_pki_ca_devkey.o
+OBJECTS=devkey_ca_server.o furiosa_ca_devkey.grpc.pb.o furiosa_ca_devkey.pb.o furiosa_pki_ca_devkey.o main.o
 
 all: $(PROGS) $(OPENSSL_PROGS)
 
