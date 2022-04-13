@@ -1,0 +1,1 @@
+../proto_src/furiosa_ca_devkey.pb.cc

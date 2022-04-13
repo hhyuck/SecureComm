@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package devkeyca;
+
+service DevKeyCA {
+    rpc SignDevKey(SignDevKeyRequest) returns (SignDevKeyResponse) {}
+}
+
+enum RetCode {
+    OK = 0;
+    UNKNOWN_ERROR = 1;
+}
+
+
+message SignDevKeyRequest {
+    bytes devkeypub = 1;
+}
+
+message SignDevKeyResponse {
+    RetCode ret = 1;
+    bytes signature = 2;
+}
