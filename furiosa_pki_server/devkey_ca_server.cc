@@ -54,7 +54,7 @@ Status DevKeyCAImpl::SignDevKey(ServerContext* context, const SignDevKeyRequest*
 
     pubkey_size = request->devkeypub_size();
     devkeypub = (uint8_t*)malloc(sizeof(uint64_t)*pubkey_size);
-    devkeypub_ptr = (uint64_t*)devkeypub;
+    devkeypub_ptr = reinterpret_cast<uint64_t*>(devkeypub);
     
     for(int i=0; i<pubkey_size; i++ )
         devkeypub_ptr[i] = request->devkeypub(i);
@@ -73,9 +73,8 @@ Status DevKeyCAImpl::SignDevKey(ServerContext* context, const SignDevKeyRequest*
         response->set_ret(RetCode::UNKNOWN_ERROR);
     }
     else {
-        uint64_t *key_pub_signature = (uint64_t*)signature;
+        uint64_t *key_pub_signature = reinterpret_cast<uint64_t*>(signature);
         for(int i=0; i<signature_len/8; i++ )
-            //response->set_signature(i, key_pub_signature[i]);
             response->add_signature(key_pub_signature[i]);
         response->set_ret(RetCode::OK);
     }

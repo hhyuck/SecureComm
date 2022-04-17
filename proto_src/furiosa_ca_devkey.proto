@@ -11,7 +11,6 @@ enum RetCode {
     UNKNOWN_ERROR = 1;
 }
 
-
 message SignDevKeyRequest {
     repeated uint64 devkeypub = 1;
     //bytes devkeypub = 1;
@@ -19,6 +18,6 @@ message SignDevKeyRequest {
 
 message SignDevKeyResponse {
     RetCode ret = 1;
-    //bytes signature = 2;
     repeated uint64 signature = 2;
+    //bytes signature = 2;
 }
