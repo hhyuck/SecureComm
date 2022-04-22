@@ -115,9 +115,10 @@ void verify_pub_key(char *pub_key_filename, char *signed_pub_key_filename)
 
 	if (ret == 0) {
 		printf("Verfification failed\n");
-		exit(0);
 	}
-	printf("Verfification success\n");
+    else {
+	    printf("Verfification success\n");
+    }
 }
 
 int main()

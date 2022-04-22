@@ -70,10 +70,10 @@ int main()
 	/*
 	   printf("Read private key %d\n", EC_KEY_set_private_key( myecc, d ));
 	   printf("Read public key %d\n",  EC_KEY_set_public_key_affine_coordinates( myecc, X, Y )); */
-	//EC_KEY_set_private_key(myecc, d);
-	//EC_KEY_set_public_key_affine_coordinates(myecc, X, Y);
+	EC_KEY_set_private_key(myecc, d);
+	EC_KEY_set_public_key_affine_coordinates(myecc, X, Y);
 
-    EC_KEY_generate_key(myecc);
+    //EC_KEY_generate_key(myecc);
 
 	close(fd);
 
